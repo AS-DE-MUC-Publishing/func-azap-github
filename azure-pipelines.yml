@@ -23,19 +23,19 @@ stages:
             displayName: Restore
             inputs:
               command: 'restore'
-              projects:  '$(functionName)/*.csproj'
+              projects:  '$(functionName).csproj'
           - task: DotNetCoreCLI@2
             displayName: Build
             inputs:
               command: 'build'
-              projects: '$(functionName)/*.csproj'
+              projects: '$(functionName).csproj'
               arguments: --configuration $(buildConfiguration)        
           - task: DotNetCoreCLI@2
             displayName: Publish
             inputs:
               command: 'publish'
               publishWebProjects: false
-              projects: '$(functionName)/*.csproj'
+              projects: '$(functionName).csproj'
               arguments: '--configuration $(buildConfiguration) --output $(build.artifactstagingdirectory)'
               zipAfterPublish: True
           - task: PublishBuildArtifacts@1
