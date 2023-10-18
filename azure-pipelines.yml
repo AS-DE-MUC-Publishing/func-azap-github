@@ -36,12 +36,12 @@ stages:
               command: 'publish'
               publishWebProjects: false
               projects: '$(functionName).csproj'
-              arguments: '--configuration $(buildConfiguration) --output $(build.artifactstagingdirectory)'
-              zipAfterPublish: True
+              arguments: '--configuration $(buildConfiguration) --output $(build.artifactstagingdirectory)'  
+              zipAfterPublish: True                         
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Artifact'
             inputs:
-              PathtoPublish: '$(build.artifactstagingdirectory)'
+              PathtoPublish: '$(build.artifactstagingdirectory)'             
   - stage: DeployDev
     displayName: 'Deploy func-azap-app-durable-ingest-dev'
     dependsOn: Build
@@ -62,7 +62,7 @@ stages:
                     azureSubscription: '$(serviceConnectionDev)'
                     appType: functionApp
                     WebAppName: '$(functionAppName)-dev'                   
-                    package: '$(Pipeline.Workspace)/drop/$(functionName).zip'                   
+                    package: '$(Pipeline.Workspace)/drop/s.zip'                   
                     enableCustomDeployment: true
                     RemoveAdditionalFilesFlag: true
   - stage: DeployProd
@@ -85,6 +85,6 @@ stages:
                     azureSubscription: '$(serviceConnectionProd)'
                     appType: functionApp
                     WebAppName: '$(functionAppName)-prod'                   
-                    package: '$(Pipeline.Workspace)/drop/$(functionName).zip'                   
+                    package: '$(Pipeline.Workspace)/drop/s.zip'                   
                     enableCustomDeployment: true
                     RemoveAdditionalFilesFlag: true
