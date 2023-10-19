@@ -111,10 +111,13 @@ namespace azap
             var adls_sink = new DatalakeClient(mylog, storageAccount, sinkContainer);
             var adls_log = new DatalakeClient(mylog, storageAccount, "importlogs");         
 
-            mylog.LogInformation("Datalakeclients created");      
+            mylog.LogInformation("Datalakeclients created");     
+            await foreach (BlobItem blobItem in adls_source._containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, filepath))   
+            {   
+                  mylog.LogInformation("Blob found: " + blobItem.Name);
+            }
 
-            BlobClient sinkBlobClient= adls_sink._containerClient.GetBlobClient("newfile.parquet"); 
-            mylog.LogInformation("sinkBlobClient created");    
+            
 
         // // ---------------------- Reading from Source --------------------
         // await foreach (BlobItem blobItem in adls_source._containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, filepath))   
