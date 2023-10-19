@@ -42,19 +42,41 @@ namespace azap
             using (var reader = new StreamReader(stream))
             {
                 string request = await reader.ReadToEndAsync();
-                outputs.Add(await context.CallActivityAsync<string>("ingest-selectedcolumns", request));
+                // outputs.Add(await context.CallActivityAsync<string>("ingest-selectedcolumns", request));
+                outputs.Add(await context.CallActivityAsync<string>(nameof(SayHello), request));
             }
             // returns ["Hello Tokyo!", "Hello Seattle!", "Hello London!"]
             return outputs;
         }
 
-        // [FunctionName(nameof(SayHello))]
-        // public static string SayHello([ActivityTrigger] string name, ILogger log)
-        // {
+        [FunctionName(nameof(SayHello))]
+        public static string SayHello([ActivityTrigger] string request, ILogger mylog)
+        {
            
-        //     log.LogInformation("Saying hello to {name}.", name);
-        //     return $"Hello {name}!";
-        // }      
+             mylog.LogInformation("Activity function ingest_selectedcolumns startet");        
+            //-----------------------  Parameter -----------------------------------
+            dynamic data = JsonConvert.DeserializeObject(request);           
+
+            string storageAccount =data?.storageAccount; 
+            string header_row=data?.header_row;   
+            string sourceContainer = data?.sourceContainer;  
+            string sinkContainer=data?.sinkContainer;  
+            string filepath = data?.filepath + "/"; 
+            string columns =data?.columns;  
+            string source_filename=data?.source_filename;
+            string source_suffix=data?.source_suffix;
+            string sink_filename=data?.sink_filename;
+            string sink_filename_withDate=data?.sink_filename_withDate;            
+            string days_lastmodified =data?.days_lastmodified;  
+
+            //-----------------------  Variables -----------------------------------         
+            int days=Int16.Parse(days_lastmodified); 
+            List<SelectedColumn> ColumnPosition = new List<SelectedColumn>();   
+            int int_header_row=Int16.Parse(header_row);
+
+            mylog.LogInformation("Parameter from requestbody read");      
+            return $"Test fertig";
+        }      
 
         [FunctionName("ingest-selectedcolumns")]
         public static async Task<string> ingest_selectedcolumns([ActivityTrigger]  string request, ILogger mylog)
