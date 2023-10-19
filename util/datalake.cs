@@ -13,9 +13,11 @@ namespace azap.util
 
         public DatalakeClient(ILogger log, string storageAccount, string Container)
         {
+              
             var credential = new DefaultAzureCredential();
             _log = log;            
-            _containerClient = new BlobContainerClient(new Uri($"https://{storageAccount}.blob.core.windows.net/{Container}"), credential);           
+            _containerClient = new BlobContainerClient(new Uri($"https://{storageAccount}.blob.core.windows.net/{Container}"), credential);  
+            _log.LogInformation($"DatalakeClient: {_containerClient.Uri}");         
         }
 
     }

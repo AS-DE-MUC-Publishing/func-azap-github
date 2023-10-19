@@ -59,7 +59,7 @@ namespace azap
         [FunctionName("ingest-selectedcolumns")]
         public static async Task<string> ingest_selectedcolumns([ActivityTrigger]  string request, ILogger mylog)
         {
-                      
+           mylog.LogInformation("Activity function ingest_selectedcolumns startet");        
             //-----------------------  Parameter -----------------------------------
             dynamic data = JsonConvert.DeserializeObject(request);           
 
@@ -81,13 +81,15 @@ namespace azap
             int copyCount=0;
             List<SelectedColumn> ColumnPosition = new List<SelectedColumn>();   
             int int_header_row=Int16.Parse(header_row);
+
+            mylog.LogInformation("Parameter from requestbody read");      
            
            // ---------------------- Storage Account --------------------            
             var adls_source = new DatalakeClient(mylog, storageAccount, sourceContainer);
             var adls_sink = new DatalakeClient(mylog, storageAccount, sinkContainer);
             var adls_log = new DatalakeClient(mylog, storageAccount, "importlogs");         
 
-                  
+            mylog.LogInformation("Datalakeclients created");       
 
         // ---------------------- Reading from Source --------------------
         await foreach (BlobItem blobItem in adls_source._containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, filepath))   
