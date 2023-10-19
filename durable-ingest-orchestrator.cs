@@ -107,11 +107,11 @@ namespace azap
             mylog.LogInformation("Parameter from requestbody read");      
            
            // ---------------------- Storage Account --------------------            
-        //     var adls_source = new DatalakeClient(mylog, storageAccount, sourceContainer);
-        //     var adls_sink = new DatalakeClient(mylog, storageAccount, sinkContainer);
-        //     var adls_log = new DatalakeClient(mylog, storageAccount, "importlogs");         
+            var adls_source = new DatalakeClient(mylog, storageAccount, sourceContainer);
+            var adls_sink = new DatalakeClient(mylog, storageAccount, sinkContainer);
+            var adls_log = new DatalakeClient(mylog, storageAccount, "importlogs");         
 
-        //     mylog.LogInformation("Datalakeclients created");       
+            mylog.LogInformation("Datalakeclients created");       
 
         // // ---------------------- Reading from Source --------------------
         // await foreach (BlobItem blobItem in adls_source._containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, filepath))   
