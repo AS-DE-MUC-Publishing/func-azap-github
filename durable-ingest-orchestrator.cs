@@ -147,7 +147,7 @@ namespace azap
             mylog.LogInformation("Filename und Datum_id (Date2ConvertWithPattern): " + filepath + source_filename + " datum_id " + Datum_id);    
 
             // --------- actual culture -------------------
-           CultureInfo myCI = new CultureInfo("en-US");
+           CultureInfo myCI = new CultureInfo("de-DE");
            Calendar myCal = myCI.Calendar;
            CalendarWeekRule cwr = myCI.DateTimeFormat.CalendarWeekRule;
            DayOfWeek firstDow = myCI.DateTimeFormat.FirstDayOfWeek;
@@ -165,9 +165,10 @@ namespace azap
             DateTime dateManipulated = DateTime.ParseExact(Datum, validformats, myCI);
                 // Display the DayOfWeek string representation
             Console.WriteLine(dateManipulated.DayOfWeek.ToString());
-            if (dateManipulated.DayOfWeek.ToString() == "Sunday" && filepath == "amazon/search/week/")
+            if ((dateManipulated.DayOfWeek.ToString() == "Sonntag" || dateManipulated.DayOfWeek.ToString() == "Sunday") && filepath == "amazon/search/week/")
             {
-                string dateManipulatedDayOffset = kwDatum.AddDays(1).ToString("yyyyMMdd");
+                kwDatum = kwDatum.AddDays(1); 
+                string dateManipulatedDayOffset = kwDatum.ToString("yyyyMMdd");               
                 Datum_id = dateManipulatedDayOffset;       
                 Datum = dateManipulatedDayOffset;                      
                 //Console.WriteLine(Datum_id);
