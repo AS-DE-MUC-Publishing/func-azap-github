@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "func-azap-app-durable-ingest", "func-azap-app-durable-ingest.csproj", "{B72BC00F-A349-4D02-A7F7-89B08C549FBF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "func-azap-app-common", "func-azap-app-common.csproj", "{B72BC00F-A349-4D02-A7F7-89B08C549FBF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
