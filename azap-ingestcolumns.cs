@@ -27,9 +27,9 @@ using System.Globalization;
 
 namespace azap
 {
-    public static class durable_ingest_orchestrator
+    public static class ingestcolumns_orchestrator
     {
-        [FunctionName("durable_ingest_orchestrator")]
+        [FunctionName("ingestcolumns-orchestrator")]
         public static async Task<List<string>> RunOrchestrator(
             [OrchestrationTrigger] IDurableOrchestrationContext context)
         {
@@ -78,7 +78,7 @@ namespace azap
         //     return $"Test fertig";
         // }      
 
-        [FunctionName(nameof(IngestColumns))]
+        [FunctionName("ingestcolumns-activity")]
         public static async Task<string> IngestColumns([ActivityTrigger]  string request, ILogger mylog)
         {
            mylog.LogInformation("Activity function ingest_selectedcolumns startet");        
@@ -357,7 +357,7 @@ namespace azap
 
         
 
-        [FunctionName("durable_ingest_orchestrator_HttpStart")]
+        [FunctionName("ingestcolumns-HttpStart")]
         public static async Task<HttpResponseMessage> HttpStart(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestMessage req,
             [DurableClient] IDurableOrchestrationClient starter,
