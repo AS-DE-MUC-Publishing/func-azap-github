@@ -17,7 +17,7 @@ namespace azap
     {   
         [FunctionName("blobcopy")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function,  "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Admin,  "post", Route = null)] HttpRequest req,
             ILogger mylog)
         {
             //-----------------------  Parameter -----------------------------------

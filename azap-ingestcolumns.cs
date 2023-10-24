@@ -49,34 +49,7 @@ namespace azap
             return outputs;
         }
 
-        // [FunctionName(nameof(SayHello))]
-        // public static async Task<string> SayHello([ActivityTrigger] string request, ILogger mylog)
-        // {
-           
-        //      mylog.LogInformation("Activity function ingest_selectedcolumns startet");        
-        //     //-----------------------  Parameter -----------------------------------
-        //     dynamic data = JsonConvert.DeserializeObject(request);           
-
-        //     string storageAccount =data?.storageAccount; 
-        //     string header_row=data?.header_row;   
-        //     string sourceContainer = data?.sourceContainer;  
-        //     string sinkContainer=data?.sinkContainer;  
-        //     string filepath = data?.filepath + "/"; 
-        //     string columns =data?.columns;  
-        //     string source_filename=data?.source_filename;
-        //     string source_suffix=data?.source_suffix;
-        //     string sink_filename=data?.sink_filename;
-        //     string sink_filename_withDate=data?.sink_filename_withDate;            
-        //     string days_lastmodified =data?.days_lastmodified;  
-
-        //     //-----------------------  Variables -----------------------------------         
-        //     int days=Int16.Parse(days_lastmodified); 
-        //     List<SelectedColumn> ColumnPosition = new List<SelectedColumn>();   
-        //     int int_header_row=Int16.Parse(header_row);
-
-        //     mylog.LogInformation("Parameter from requestbody read");      
-        //     return $"Test fertig";
-        // }      
+     
 
         [FunctionName("ingestcolumns-activity")]
         public static async Task<string> IngestColumns([ActivityTrigger]  string request, ILogger mylog)
@@ -357,9 +330,9 @@ namespace azap
 
         
 
-        [FunctionName("ingestcolumns-HttpStart")]
+        [FunctionName("ingestcolumns")]
         public static async Task<HttpResponseMessage> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestMessage req,
+            [HttpTrigger(AuthorizationLevel.Admin, "get", "post")] HttpRequestMessage req,
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
         {
