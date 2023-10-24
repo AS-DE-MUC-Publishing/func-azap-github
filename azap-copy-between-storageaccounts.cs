@@ -19,7 +19,7 @@ namespace azap
     {   
         [FunctionName("copy-between-storageaccounts")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Admin,  "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function,  "post", Route = null)] HttpRequest req,
             ILogger mylog)
         {
             //-----------------------  Parameter -----------------------------------

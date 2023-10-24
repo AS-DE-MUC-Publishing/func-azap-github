@@ -332,7 +332,7 @@ namespace azap
 
         [FunctionName("ingestcolumns")]
         public static async Task<HttpResponseMessage> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Admin, "get", "post")] HttpRequestMessage req,
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestMessage req,
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
         {

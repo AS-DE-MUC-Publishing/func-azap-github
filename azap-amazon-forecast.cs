@@ -21,7 +21,7 @@ namespace azap
     {
         [FunctionName("amazon-forecast")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Admin, "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
             ILogger mylog)
         {                    
 
