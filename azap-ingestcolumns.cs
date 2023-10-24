@@ -43,7 +43,7 @@ namespace azap
             {
                 string request = await reader.ReadToEndAsync();
                 //  outputs.Add(await context.CallActivityAsync<string>("ingest-selectedcolumns", request));
-                outputs.Add(await context.CallActivityAsync<string>(nameof(IngestColumns), request));
+                outputs.Add(await context.CallActivityAsync<string>("ingestcolumns-activity", request));
             }
             // returns ["Hello Tokyo!", "Hello Seattle!", "Hello London!"]
             return outputs;
@@ -52,7 +52,7 @@ namespace azap
      
 
         [FunctionName("ingestcolumns-activity")]
-        public static async Task<string> IngestColumns([ActivityTrigger]  string request, ILogger mylog)
+        public static async Task<string> IngestColumns_activity([ActivityTrigger]  string request, ILogger mylog)
         {
            mylog.LogInformation("Activity function ingest_selectedcolumns startet");        
             //-----------------------  Parameter -----------------------------------
@@ -337,7 +337,7 @@ namespace azap
             ILogger log)
         {
             // Function input comes from the request content.
-            string instanceId = await starter.StartNewAsync("durable_ingest_orchestrator",  null,  await req.Content.ReadAsStringAsync());
+            string instanceId = await starter.StartNewAsync("ingestcolumns-orchestrator",  null,  await req.Content.ReadAsStringAsync());
 
             log.LogInformation("Started orchestration with ID = '{instanceId}'.", instanceId);
 
