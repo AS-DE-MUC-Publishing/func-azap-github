@@ -319,6 +319,13 @@ namespace azap
                 sinkTable.Reset();
                 copyCount=copyCount+1;
                 String blobtime=(DateTime.Now-blobstart).TotalSeconds.ToString();
+
+                if (sourceContainer=="temp-stage") {
+
+                    // BlobClient sourceBlobClient= adls_source._containerClient.GetBlobClient(blobItem.Name);   
+                    await sourceBlob.DeleteIfExistsAsync(); 
+                    mylog.LogInformation("Blob deleted from source file  " + filepath + source_filename + " from " + sourceContainer );
+                }
                 
               
             }
