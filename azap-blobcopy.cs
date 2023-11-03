@@ -59,6 +59,37 @@ namespace azap
                                                         BlobClient sinkBlob = adls_sink._containerClient.GetBlobClient(sinkFile);
                                                         BlobClient sourceBlob=adls_source._containerClient.GetBlobClient(blobItem.Name);                                                     
                                                          // --------------- write sink file ------------------------------------------------------   
+                                                          using (StreamReader reader = new StreamReader(req.Body))
+        {
+            // ------------- neue sinkTable ----------------
+            DataTable sinkTable = new DataTable();
+            int rownum = 1;
+            DateTime blobstart = DateTime.Now;
+
+            using (TextFieldParser parser = new TextFieldParser(reader.BaseStream, System.Text.Encoding.UTF8))
+            {
+                parser.TextFieldType = FieldType.Delimited;
+                parser.SetDelimiters(delimiter);
+                parser.HasFieldsEnclosedInQuotes = true;
+                parser.TrimWhiteSpace = true;
+
+                // Write the output CSV file to the blob storage
+                using (StreamWriter writer = new StreamWriter(outputBlob))
+                {
+                    while (!parser.EndOfData)
+                    {
+                        string[] fields = parser.ReadFields();
+                        writer.WriteLine(string.Join(",", fields.Select(field => $"\"{field}\"")));
+                    }
+                }
+            }
+        }
+
+
+
+
+
+                                                         //--------------------------------------------------------------------------------------
                                                         await sinkBlob.StartCopyFromUriAsync (sourceBlob.Uri);
                                                         mylog.LogInformation("Copied " + filepath + source_filename + " from " + sinkContainer +  " to container " + sourceContainer + " as " + sinkFile);   
                                                         copyCount=copyCount+1;                                                    
