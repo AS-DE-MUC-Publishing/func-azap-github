@@ -10,6 +10,8 @@ using Newtonsoft.Json;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using azap.util;
+using System.Data;
+using Microsoft.VisualBasic.FileIO;
 
 namespace azap
 {
@@ -46,56 +48,20 @@ namespace azap
            // var adls_log = new DatalakeClient(mylog, storageAccount, "importlogs");
             
         await foreach (BlobItem blobItem in adls_source._containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, filepath ))   
-           {   
-             //    mylog.LogInformation("blobItem.Name: " + blobItem.Name);
+        {   
+            // mylog.LogInformation("blobItem.Name: " + blobItem.Name);
 
-        if (blobItem.Name.Contains(source_filename) && blobItem.Name.EndsWith(source_suffix))         
-        {
-            if ( DateTime.Now.AddDays(-1*days)<blobItem.Properties.LastModified)
-            {  
-                                                        String Datum_id=blobItem.Name.Replace(filepath + source_filename,"").Substring(0,8);
-                                                        String fileType=blobItem.Name.Substring(blobItem.Name.LastIndexOf("."),blobItem.Name.Length-blobItem.Name.LastIndexOf("."));
-                                                        String sinkFile=filepath + sink_filename + Datum_id + fileType;                                                              
-                                                        BlobClient sinkBlob = adls_sink._containerClient.GetBlobClient(sinkFile);
-                                                        BlobClient sourceBlob=adls_source._containerClient.GetBlobClient(blobItem.Name);                                                     
-                                                         // --------------- write sink file ------------------------------------------------------   
-                                                          using (StreamReader reader = new StreamReader(req.Body))
-        {
-            // ------------- neue sinkTable ----------------
-            DataTable sinkTable = new DataTable();
-            int rownum = 1;
-            DateTime blobstart = DateTime.Now;
-
-            using (TextFieldParser parser = new TextFieldParser(reader.BaseStream, System.Text.Encoding.UTF8))
+            if (blobItem.Name.Contains(source_filename) && blobItem.Name.EndsWith(source_suffix))         
             {
-                parser.TextFieldType = FieldType.Delimited;
-                parser.SetDelimiters(delimiter);
-                parser.HasFieldsEnclosedInQuotes = true;
-                parser.TrimWhiteSpace = true;
+                // ...
 
-                // Write the output CSV file to the blob storage
-                using (StreamWriter writer = new StreamWriter(outputBlob))
+                using (StreamReader reader = new StreamReader(await adls_source._containerClient.GetBlobClient(blobItem.Name).OpenReadAsync()))
+                using (TextFieldParser parser = new TextFieldParser(reader.BaseStream, System.Text.Encoding.UTF8))
                 {
-                    while (!parser.EndOfData)
-                    {
-                        string[] fields = parser.ReadFields();
-                        writer.WriteLine(string.Join(",", fields.Select(field => $"\"{field}\"")));
-                    }
+                    // Rest of the code
                 }
-            }
-        }
-
-
-
-
-
-                                                         //--------------------------------------------------------------------------------------
-                                                        await sinkBlob.StartCopyFromUriAsync (sourceBlob.Uri);
-                                                        mylog.LogInformation("Copied " + filepath + source_filename + " from " + sinkContainer +  " to container " + sourceContainer + " as " + sinkFile);   
-                                                        copyCount=copyCount+1;                                                    
-                                                    }  
-                                                }          
-            }                           
+            }          
+        }                           
          
             string infostr=sink_filename  + ": " + copyCount.ToString() + " Files copied from " + sourceContainer + " to " + sinkContainer;
             return new OkObjectResult(new {Result = "Success"});            
