@@ -37,15 +37,18 @@ namespace azap
             string environment=data?.environment;  
             // string user = data?.user;  
             // SQL Connection
-            string connectionString = $"Server=tcp:syn-azap-{workspace}-{environment}.sql.azuresynapse.net,1433;Database={database};TrustServerCertificate=True";
+            string connectionString = $"Server=tcp:syn-azap-{workspace}-{environment}.sql.azuresynapse.net,1433;Database={database};Authentication=Active Directory Managed Identity;";//TrustServerCertificate=True";
             mylog.LogInformation("connectionString: " + connectionString);
-            SqlConnection connection = new SqlConnection(connectionString); 
- //SqlConnection connection = new SqlConnection("Server=tcp:<servername>.database.windows.net;Database=<DBNAME>;Authentication=Active Directory Default;User Id=adf391a2-652a-4f84-8d96-e5efce57d19b;TrustServerCertificate=True");  // user-assigned identity
-            var credential = new DefaultAzureCredential(); 
- // var credential = new Azure.Identity.DefaultAzureCredential(new DefaultAzureCredentialOptions { ManagedIdentityClientId = '<client-id-of-user-assigned-identity>' }); // user-assigned identity
-            var token = credential.GetToken(new Azure.Core.TokenRequestContext(new[] { "https://database.windows.net/.default" }));
-            connection.AccessToken = token.Token;
-            mylog.LogInformation("token.Token: " + token.Token);
+//             SqlConnection connection = new SqlConnection(connectionString); 
+//  //SqlConnection connection = new SqlConnection("Server=tcp:<servername>.database.windows.net;Database=<DBNAME>;Authentication=Active Directory Default;User Id=adf391a2-652a-4f84-8d96-e5efce57d19b;TrustServerCertificate=True");  // user-assigned identity
+//             var credential = new DefaultAzureCredential(); 
+//  // var credential = new Azure.Identity.DefaultAzureCredential(new DefaultAzureCredentialOptions { ManagedIdentityClientId = '<client-id-of-user-assigned-identity>' }); // user-assigned identity
+//             var token = credential.GetToken(new Azure.Core.TokenRequestContext(new[] { "https://database.windows.net/.default" }));
+//             connection.AccessToken = token.Token;
+//             mylog.LogInformation("token.Token: " + token.Token);
+
+
+            using Microsoft.Data.SqlClient.SqlConnection connection = new(connectionString);
             await connection.OpenAsync();
                 // SQL Query
                 string query = "SELECT COUNT(*) FROM global.cubis_product";
