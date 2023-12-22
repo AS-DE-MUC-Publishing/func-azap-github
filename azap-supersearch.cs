@@ -16,6 +16,7 @@ using System.Data;
 using Microsoft.VisualBasic.FileIO;
 using azap.util;
 using System.Globalization;
+using Azure.Security.KeyVault.Secrets;
 
 
 namespace azap
@@ -36,19 +37,42 @@ namespace azap
             string workspace = data?.workspace; 
             string environment=data?.environment;  
             // string user = data?.user;  
+            // Create a new SecretClient using the DefaultAzureCredential
+            string username ="supersearch";
+
+            var kvUri = $"https://kv-azap-common-{environment}.vault.azure.net";
+            var secretClient = new SecretClient(new Uri(kvUri), new DefaultAzureCredential());
+
+// Retrieve the secret
+KeyVaultSecret secret = await secretClient.GetSecretAsync("pw-supersearch");
+ mylog.LogInformation("secret: " + secret.Value);
+// Use the secret in your connection string
+// string connectionString = $"Server=tcp:syn-azap-{workspace}-{environment}.sql.azuresynapse.net,1433;Initial Catalog={database};User ID={username};Password={secret.Value};";
+//  mylog.LogInformation("connectionString: " + connectionString);
+// Rest of your code...
+            
+            
+            
             // SQL Connection
-            string connectionString = $"Server=tcp:syn-azap-{workspace}-{environment}.sql.azuresynapse.net,1433;Database={database};Authentication=Active Directory Managed Identity;";//TrustServerCertificate=True";
-            mylog.LogInformation("connectionString: " + connectionString);
-            SqlConnection connection = new SqlConnection(connectionString); 
-           //SqlConnection connection = new SqlConnection("Server=tcp:<servername>.database.windows.net;Database=<DBNAME>;Authentication=Active Directory Default;User Id=adf391a2-652a-4f84-8d96-e5efce57d19b;TrustServerCertificate=True");  // user-assigned identity
-            var credential = new DefaultAzureCredential(); 
- // var credential = new Azure.Identity.DefaultAzureCredential(new DefaultAzureCredentialOptions { ManagedIdentityClientId = '<client-id-of-user-assigned-identity>' }); // user-assigned identity
-            var token = credential.GetToken(new Azure.Core.TokenRequestContext(new[] { "https://database.windows.net/.default" }));
-            connection.AccessToken = token.Token;
-            mylog.LogInformation("token.Token: " + token.Token);
+
+
+
+string connectionString = $"Server=tcp:syn-azap-{workspace}-{environment}.sql.azuresynapse.net,1433;Initial Catalog={database};Authentication=Active Directory Managed Identity;";//TrustServerCertificate=True";
+//             string connectionString = $"Server=tcp:syn-azap-{workspace}-{environment}.sql.azuresynapse.net,1433;Initial Catalog={database};User ID={username};Password={password};";
+//             mylog.LogInformation("connectionString: " + connectionString);
+//             SqlConnection connection = new SqlConnection(connectionString); 
+//            //SqlConnection connection = new SqlConnection("Server=tcp:<servername>.database.windows.net;Database=<DBNAME>;Authentication=Active Directory Default;User Id=adf391a2-652a-4f84-8d96-e5efce57d19b;TrustServerCertificate=True");  // user-assigned identity
+//             var credential = new DefaultAzureCredential(); 
+//  // var credential = new Azure.Identity.DefaultAzureCredential(new DefaultAzureCredentialOptions { ManagedIdentityClientId = '<client-id-of-user-assigned-identity>' }); // user-assigned identity
+//             var token = credential.GetToken(new Azure.Core.TokenRequestContext(new[] { "https://database.windows.net/.default" }));
+//             connection.AccessToken = token.Token;
+//             mylog.LogInformation("token.Token: " + token.Token);
 
 
             //using Microsoft.Data.SqlClient.SqlConnection connection = new(connectionString);
+
+             SqlConnection connection = new SqlConnection(connectionString); 
+
             await connection.OpenAsync();
                 // SQL Query
                 string query = "SELECT COUNT(*) FROM global.cubis_product";
