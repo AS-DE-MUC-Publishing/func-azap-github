@@ -30,6 +30,7 @@ namespace azap
             string servername = data?.servername; 
             string user = data?.user;  
             string authentification=data?.authentification;
+            string environment=data?.environment;
 
             string connectionString;
             SqlConnection connection;
