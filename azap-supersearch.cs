@@ -68,7 +68,7 @@ namespace azap
 
             await connection.OpenAsync();
             // SQL Query
-            string query = "SELECT COUNT(*) FROM global.cubis_product";
+            string query = "SELECT COUNT(*) FROM search.cubis_product";
             using (SqlCommand command = new SqlCommand(query, connection))
             {
                 rowCount = (int)await command.ExecuteScalarAsync();
