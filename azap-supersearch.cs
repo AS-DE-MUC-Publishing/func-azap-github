@@ -34,6 +34,7 @@ namespace azap
 
             string connectionString;
             SqlConnection connection;
+            string url_token;
       
 
             // Create a new SecretClient using the DefaultAzureCredential
@@ -41,10 +42,16 @@ namespace azap
                 var credential = new DefaultAzureCredential(); 
                 mylog.LogInformation("MSI-Authentification: " + authentication);
                 if (authentication=="token") {
-                    connectionString=$"Server=tcp:{servername},1433;Initial Catalog={database};";                      
-                    var token = credential.GetToken(new Azure.Core.TokenRequestContext(new[] { "https://database.windows.net/.default" }));
+                    connectionString=$"Server=tcp:{servername},1433;Initial Catalog={database};";  
+                    if (servername.Contains("azuresynapse")) {
+                        url_token="https://sql.azuresynapse.net/.default";
+                    }
+                     else {
+                        url_token="https://database.windows.net/.default";             
+                    }                  
+                    var token = credential.GetToken(new Azure.Core.TokenRequestContext(new[] { url_token }));
                     connection = new SqlConnection(connectionString);
-                    connection.AccessToken = token.Token;    
+                    connection.AccessToken = token.Token;                     
                 }
                     else
                 { 
