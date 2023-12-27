@@ -29,7 +29,7 @@ namespace azap
             string database = data?.database;
             string servername = data?.servername; 
             string user = data?.user;  
-            string authentification=data?.authentification;
+            string authentication=data?.authentication;
             string environment=data?.environment;
 
             string connectionString;
@@ -39,9 +39,9 @@ namespace azap
             // Create a new SecretClient using the DefaultAzureCredential
             if (user == "msi") {
                 var credential = new DefaultAzureCredential(); 
-                mylog.LogInformation("MSI-Authentification: " + authentification);
-                if (authentification=="token") {
-                    connectionString=$"Server=tcp:{servername},1433;Initial Catalog={database};Authentication=Active Directory Default;";                      
+                mylog.LogInformation("MSI-Authentification: " + authentication);
+                if (authentication=="token") {
+                    connectionString=$"Server=tcp:{servername},1433;Initial Catalog={database};";                      
                     var token = credential.GetToken(new Azure.Core.TokenRequestContext(new[] { "https://database.windows.net/.default" }));
                     connection = new SqlConnection(connectionString);
                     connection.AccessToken = token.Token;    
@@ -56,12 +56,12 @@ namespace azap
             }
             else
             {
-            var kvUri = $"https://kv-azap-common-{environment}.vault.azure.net";
-            var secretClient = new SecretClient(new Uri(kvUri), new DefaultAzureCredential());
-            KeyVaultSecret secret = await secretClient.GetSecretAsync("pw-supersearch");
-            connectionString = $"Server=tcp:{servername},1433;Initial Catalog={database};User ID={user};Password={secret.Value};";
-            mylog.LogInformation("SQL-User-Authentification: " + authentification);
-            connection = new SqlConnection(connectionString);    
+                var kvUri = $"https://kv-azap-common-{environment}.vault.azure.net";
+                var secretClient = new SecretClient(new Uri(kvUri), new DefaultAzureCredential());
+                KeyVaultSecret secret = await secretClient.GetSecretAsync("pw-supersearch");
+                connectionString = $"Server=tcp:{servername},1433;Initial Catalog={database};User ID={user};Password={secret.Value};";
+                mylog.LogInformation("SQL-User-Authentification: " + authentication);
+                connection = new SqlConnection(connectionString);    
             }
 
             int rowCount=0;        
