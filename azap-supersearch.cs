@@ -9,13 +9,6 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Azure.Identity;
 using Microsoft.Data.SqlClient;
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
-using System.Collections.Generic;
-using System.Data;
-using Microsoft.VisualBasic.FileIO;
-using azap.util;
-using System.Globalization;
 using Azure.Security.KeyVault.Secrets;
 
 
@@ -34,58 +27,54 @@ namespace azap
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);             
             string database = data?.database;
-            string workspace = data?.workspace; 
-            string environment=data?.environment;  
-            // string user = data?.user;  
-            // Create a new SecretClient using the DefaultAzureCredential
-            string username ="supersearch";
+            string servername = data?.servername; 
+            string user = data?.user;  
+            string authentification=data?.authentification;
 
+            string connectionString;
+            SqlConnection connection;
+      
+
+            // Create a new SecretClient using the DefaultAzureCredential
+            if (user == "msi") {
+                var credential = new DefaultAzureCredential(); 
+                mylog.LogInformation("MSI-Authentification: " + authentification);
+                if (authentification=="token") {
+                    connectionString=$"Server=tcp:{servername},1433;Initial Catalog={database};Authentication=Active Directory Default;";                      
+                    var token = credential.GetToken(new Azure.Core.TokenRequestContext(new[] { "https://database.windows.net/.default" }));
+                    connection = new SqlConnection(connectionString);
+                    connection.AccessToken = token.Token;    
+                }
+                    else
+                { 
+                    connectionString=$"Server=tcp:{servername},1433;Initial Catalog={database};Authentication=Active Directory Managed Identity;";    
+                    connection = new SqlConnection(connectionString);                   
+                   
+                }
+                 
+            }
+            else
+            {
             var kvUri = $"https://kv-azap-common-{environment}.vault.azure.net";
             var secretClient = new SecretClient(new Uri(kvUri), new DefaultAzureCredential());
+            KeyVaultSecret secret = await secretClient.GetSecretAsync("pw-supersearch");
+            connectionString = $"Server=tcp:{servername},1433;Initial Catalog={database};User ID={user};Password={secret.Value};";
+            mylog.LogInformation("SQL-User-Authentification: " + authentification);
+            connection = new SqlConnection(connectionString);    
+            }
 
-// Retrieve the secret
-KeyVaultSecret secret = await secretClient.GetSecretAsync("pw-supersearch");
- mylog.LogInformation("secret: " + secret.Value);
-// Use the secret in your connection string
-// string connectionString = $"Server=tcp:syn-azap-{workspace}-{environment}.sql.azuresynapse.net,1433;Initial Catalog={database};User ID={username};Password={secret.Value};";
-//  mylog.LogInformation("connectionString: " + connectionString);
-// Rest of your code...
-            
-            
-            
-            // SQL Connection
-
-
-
-string connectionString = $"Server=tcp:syn-azap-{workspace}-{environment}.sql.azuresynapse.net,1433;Initial Catalog={database};";//TrustServerCertificate=True";
-//             string connectionString = $"Server=tcp:syn-azap-{workspace}-{environment}.sql.azuresynapse.net,1433;Initial Catalog={database};User ID={username};Password={password};";
-//             mylog.LogInformation("connectionString: " + connectionString);
-//             SqlConnection connection = new SqlConnection(connectionString); 
-//            //SqlConnection connection = new SqlConnection("Server=tcp:<servername>.database.windows.net;Database=<DBNAME>;Authentication=Active Directory Default;User Id=adf391a2-652a-4f84-8d96-e5efce57d19b;TrustServerCertificate=True");  // user-assigned identity
-
-SqlConnection connection = new SqlConnection(connectionString);             
-            
-            var credential = new DefaultAzureCredential(); 
-            var token = credential.GetToken(new Azure.Core.TokenRequestContext(new[] { "https://database.windows.net/.default" }));
-            connection.AccessToken = token.Token;
-//             mylog.LogInformation("token.Token: " + token.Token);
-
-
-            //using Microsoft.Data.SqlClient.SqlConnection connection = new(connectionString);
-
-            
+            int rowCount=0;        
 
             await connection.OpenAsync();
-                // SQL Query
-                string query = "SELECT COUNT(*) FROM global.cubis_product";
-                using (SqlCommand command = new SqlCommand(query, connection))
-                {
-                    int rowCount = (int)await command.ExecuteScalarAsync();
-                    // Return the row count as the function's return value                    
-                }
-  
+            // SQL Query
+            string query = "SELECT COUNT(*) FROM global.cubis_product";
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                rowCount = (int)await command.ExecuteScalarAsync();
+                // Return the row count as the function's return value                    
+            }
             // If no rows were found, return a default value
-            return new OkObjectResult(0);
+            return new OkObjectResult(rowCount.ToString());
         }
     }
 
