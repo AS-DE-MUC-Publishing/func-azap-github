@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Azure.Identity;
 using Microsoft.Data.SqlClient;
 using Azure.Security.KeyVault.Secrets;
+using System.Data;
 
 
 namespace azap
@@ -74,18 +75,17 @@ namespace azap
                 connection = new SqlConnection(connectionString);    
             }
 
-            int rowCount=0;        
-
-            await connection.OpenAsync();
-            // SQL Query
-            // string query = "SELECT COUNT(*) FROM search.cubis_product";
+            await connection.OpenAsync();       
             using (SqlCommand command = new SqlCommand(query, connection))
             {
-                rowCount = (int)await command.ExecuteScalarAsync();
-                // Return the row count as the function's return value                    
+                using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    var dataTable = new DataTable();
+                    dataTable.Load(reader);
+                    string jsonResult = JsonConvert.SerializeObject(dataTable);
+                    return new OkObjectResult(jsonResult);
+                }
             }
-            // If no rows were found, return a default value
-            return new OkObjectResult(rowCount.ToString());
         }
     } 
 
