@@ -45,11 +45,13 @@ namespace azap
                     connectionString=$"Server=tcp:{servername},1433;Initial Catalog={database};";  
                     if (servername.Contains("azuresynapse")) {
                         url_token="https://sql.azuresynapse.net/.default";
+                        mylog.LogInformation("url_token from: " + authentication);
                     }
                      else {
                         url_token="https://database.windows.net/.default";             
                     }                  
                     var token = credential.GetToken(new Azure.Core.TokenRequestContext(new[] { url_token }));
+                    mylog.LogInformation("token: " + token);
                     connection = new SqlConnection(connectionString);
                     connection.AccessToken = token.Token;                     
                 }
