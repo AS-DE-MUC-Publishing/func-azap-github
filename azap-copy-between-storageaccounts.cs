@@ -48,10 +48,12 @@ namespace azap
                     
         await foreach (BlobItem blobItem in adls_source._containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, filepath ))   
            {  
-            if (blobItem.Name.Contains(source_filename_option) || source_filename_option=="" )         
+
+            if ((blobItem.Name.Contains(source_filename_option) || source_filename_option == "") && !blobItem.Name.EndsWith("_SUCCESS") )
             {
                 if ( DateTime.Now.AddDays(-1*days)<blobItem.Properties.LastModified)
                 {  
+                    // mylog.LogInformation("Found blob:  " + blobItem.Name   );   
                     BlobClient sinkBlob = adls_sink._containerClient.GetBlobClient(blobItem.Name);
                     BlobClient sourceBlob=adls_source._containerClient.GetBlobClient(blobItem.Name);    
 
