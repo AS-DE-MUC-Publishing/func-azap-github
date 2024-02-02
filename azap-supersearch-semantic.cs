@@ -30,15 +30,20 @@ namespace azap
             string searchtype=data?.searchtype;
             string top=data?.top;
             string environment=data?.environment;
+            string query = data?.query ?? string.Empty;
+            string procedure = data?.procedure ?? string.Empty;
 
             string vector = await new vectorizer().vectorize(input, environment);
 
-            string query="EXECUTE [vector_function].[usp_linked_editions_similarity]  '" + vector + "' ," + top + "  , '" + searchtype + "' ;";
+            if (procedure == string.Empty) procedure="usp_supersearch_semantic";
+            string execProcedure="EXECUTE [vector_function].[" + procedure +"]  '" + vector + "' ," + top + "  , '" + searchtype + "' ";
+            if (query != string.Empty)  execProcedure = execProcedure + " , '" + query.Replace("'", "''") + "'";
+            execProcedure=execProcedure + ';';
 
             SqlConnection connection=new AzureSqlConnection(mylog, data)._connection;
 
             await connection.OpenAsync();       
-            using (SqlCommand command = new SqlCommand(query, connection))
+            using (SqlCommand command = new SqlCommand(execProcedure, connection))
             {
                 using (SqlDataReader reader = await command.ExecuteReaderAsync())
                 {
