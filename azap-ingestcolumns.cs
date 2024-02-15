@@ -1,14 +1,11 @@
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Net.Http;
-using Azure;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Newtonsoft.Json;
 
@@ -20,7 +17,6 @@ using System.Text;
 using System.Data;
 using Microsoft.VisualBasic.FileIO;
 using System.Linq;
-using Azure.Identity;
 using azap.util;
 using System.Text.RegularExpressions;
 using System.Globalization;
@@ -52,7 +48,7 @@ namespace azap
      
 
         [FunctionName("ingestcolumns-activity")]
-        public static async Task<string> IngestColumns_activity([ActivityTrigger]  string request, ILogger mylog)
+        public static async Task<string>Activity([ActivityTrigger]  string request, ILogger mylog)
         {
            mylog.LogInformation("Activity function ingest_selectedcolumns startet");        
             //-----------------------  Parameter -----------------------------------
@@ -186,8 +182,7 @@ namespace azap
 
             if (rownum==Int16.Parse(header_row))
                 {
-                    //mylog.LogInformation("Header aus der Datenquelle wird gelesen");                 
-                     
+                    //mylog.LogInformation("Header aus der Datenquelle wird gelesen");     
                     
                     string[] header_source = parser.ReadFields();
                     string[] header_target = columns.Split('|'); 

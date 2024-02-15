@@ -12,21 +12,59 @@ using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
 using azap.util;
 using Azure.Storage.Blobs.Specialized;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using System.Net.Http;
+using System.Collections.Generic;
+using System.Text;
+
 
 namespace azap
 {
     public static class azap_copy_between_storageaccounts
     {   
+        
+        
         [FunctionName("copy-between-storageaccounts")]
-        public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function,  "post", Route = null)] HttpRequest req,
-            ILogger mylog)
+        public static async Task<HttpResponseMessage> HttpStart(
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestMessage req,
+            [DurableClient] IDurableOrchestrationClient starter,
+            ILogger log)
         {
+            // Function input comes from the request content.
+            string instanceId = await starter.StartNewAsync("copy-between-storageaccounts-orchestrator",  null,  await req.Content.ReadAsStringAsync());
+
+            log.LogInformation("Started orchestration with ID = '{instanceId}'.", instanceId);
+
+            return starter.CreateCheckStatusResponse(req, instanceId);
+        }
+
+          [FunctionName("copy-between-storageaccounts-orchestrator")]
+        public static async Task<List<string>> RunOrchestrator(
+            [OrchestrationTrigger] IDurableOrchestrationContext context)
+        {
+            var outputs = new List<string>();
+
+            string input = context.GetInput<string>();
+            byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+            using (var stream = new MemoryStream(inputBytes))
+            using (var reader = new StreamReader(stream))
+            {
+                string request = await reader.ReadToEndAsync();
+                outputs.Add(await context.CallActivityAsync<string>("copy-between-storageaccounts-activity", request));
+            }
+            return outputs;
+        }
+
+        
+        [FunctionName("copy-between-storageaccounts-activity")]
+        public static async Task<string> Activity([ActivityTrigger]  string request, ILogger mylog)
+        {
+           mylog.LogInformation("Activity function copy-between-storageaccounts startet");     
             //-----------------------  Parameter -----------------------------------
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-             string storageAccount_sink =data?.storageAccount_sink; 
+             //-----------------------  Parameter -----------------------------------
+            dynamic data = JsonConvert.DeserializeObject(request); 
+            string storageAccount_sink =data?.storageAccount_sink; 
             string container_sink = data?.container_sink;  
             string storageAccount_source =data?.storageAccount_source; 
             string container_source = data?.container_source;  
@@ -95,9 +133,9 @@ namespace azap
                     copyCount=copyCount+1;                                                    
                 }  
             }          
-            }                           
+            }                          
          
-            return new OkObjectResult(new {Result = "Success"});            
+            return "Completed";            
         }       
      }
 }
