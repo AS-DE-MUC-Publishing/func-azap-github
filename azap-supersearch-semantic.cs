@@ -40,6 +40,7 @@ namespace azap
             string execProcedure="EXECUTE [vector_function].[" + procedure +"]  '" + vector + "' ," + top + "  , '" + searchtype + "' ";
             if (query != string.Empty)  execProcedure = execProcedure + " , '" + query.Replace("'", "''") + "'";
             execProcedure=execProcedure + ';';
+            mylog.LogInformation(execProcedure);
 
             SqlConnection connection=new AzureSqlConnection(mylog, data)._connection;
 
