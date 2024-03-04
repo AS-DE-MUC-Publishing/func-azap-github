@@ -34,6 +34,7 @@ namespace azap
             string procedure = data?.procedure ?? string.Empty;
 
             string vector = await new vectorizer().vectorize(input, environment);
+            query = query.Replace("\"", "");
 
             if (procedure == string.Empty) procedure="usp_supersearch_semantic";
             string execProcedure="EXECUTE [vector_function].[" + procedure +"]  '" + vector + "' ," + top + "  , '" + searchtype + "' ";
