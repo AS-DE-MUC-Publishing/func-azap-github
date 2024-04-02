@@ -9,6 +9,9 @@ using System.Net;
 using Azure;
 using Azure.AI.OpenAI;
 using System.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 
 
 namespace azap.util
@@ -46,6 +49,40 @@ namespace azap.util
             response = string.Join(",\n", returnValue.Value.Data[0].Embedding.ToArray().Select(x => x.ToString(System.Globalization.CultureInfo.InvariantCulture)));
             response="[\n"+response+"\n]";
             return response;
+        }
+
+        public async Task<string> vectorize_vision_text(string input, string environment)
+        {
+           
+            var keyVaultUrl = $"https://kv-azap-common-{environment}.vault.azure.net";
+
+            var client = new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
+            KeyVaultSecret key_embedding = await client.GetSecretAsync("key-ai-vision-api");
+            KeyVaultSecret url_embedding = await client.GetSecretAsync("url-ai-vision-api-text");
+
+
+            Uri visionEndpoint = new (url_embedding.Value);
+            AzureKeyCredential credentials = new (key_embedding.Value);
+
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Ocp-Apim-Subscription-Key", credentials.Key);
+                httpClient.DefaultRequestHeaders.Add("Content-Type", "application/json");
+                var requestBody = new { text = input };
+                var jsonRequest = JsonConvert.SerializeObject(requestBody);
+                var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+
+                var httpResponse = await httpClient.PostAsync(visionEndpoint, content);
+                var jsonResponse = await httpResponse.Content.ReadAsStringAsync();
+
+                var vectorObject = JsonConvert.DeserializeObject<JObject>(jsonResponse);
+                var vectorArray = vectorObject["vector"].ToObject<float[]>();
+
+                var response = string.Join(",\n", vectorArray.Select(x => x.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+                response = "[\n" + response + "\n]";
+                return response;
+            }
+
         }
 
     }
