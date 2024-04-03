@@ -67,12 +67,13 @@ namespace azap.util
             using (var httpClient = new HttpClient())
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Ocp-Apim-Subscription-Key", credentials.Key);
-                httpClient.DefaultRequestHeaders.Add("Content-Type", "application/json");
+                var request = new HttpRequestMessage(HttpMethod.Post, visionEndpoint);
+                request.Headers.Add("Content-Type", "application/json");
                 var requestBody = new { text = input };
                 var jsonRequest = JsonConvert.SerializeObject(requestBody);
-                var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+                request.Content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
 
-                var httpResponse = await httpClient.PostAsync(visionEndpoint, content);
+                var httpResponse = await httpClient.SendAsync(request);
                 var jsonResponse = await httpResponse.Content.ReadAsStringAsync();
 
                 var vectorObject = JsonConvert.DeserializeObject<JObject>(jsonResponse);
