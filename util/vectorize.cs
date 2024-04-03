@@ -66,9 +66,9 @@ namespace azap.util
 
             using (var httpClient = new HttpClient())
             {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Ocp-Apim-Subscription-Key", credentials.Key);
-                var request = new HttpRequestMessage(HttpMethod.Post, visionEndpoint);
-                request.Headers.Add("Content-Type", "application/json");
+                // httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Ocp-Apim-Subscription-Key", key_embedding.Value);
+                 httpClient.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", key_embedding.Value);
+                var request = new HttpRequestMessage(HttpMethod.Post, url_embedding.Value);                
                 var requestBody = new { text = input };
                 var jsonRequest = JsonConvert.SerializeObject(requestBody);
                 request.Content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
@@ -80,7 +80,7 @@ namespace azap.util
                 var vectorArray = vectorObject["vector"].ToObject<float[]>();
 
                 var response = string.Join(",\n", vectorArray.Select(x => x.ToString(System.Globalization.CultureInfo.InvariantCulture)));
-                response = "[\n" + response + "\n]";
+                response = "[" + response + "]";
                 return response;
             }
 

@@ -35,16 +35,17 @@ namespace azap
 
             string vector = await new vectorizer().vectorize_vision_text(input, environment);
             query = query.Replace("\"", "");
+            vector = vector.Replace("\n", "");
 
-            if (procedure == string.Empty) procedure="usp_supersearch_image";
-            string execProcedure="EXECUTE [vector_function].[" + procedure +"]  '" + vector + "' ," + top + "  , '" + searchtype + "' ";
-            if (query != string.Empty)  execProcedure = execProcedure + " , '" + query.Replace("'", "''") + "'";
-            execProcedure=execProcedure + ';';
+            if (procedure == string.Empty) procedure = "usp_supersearch_image";
+            string execProcedure = "EXECUTE [vector_function].[" + procedure + "]  '" + vector + "' ," + top + "  , '" + searchtype + "' ";
+            if (query != string.Empty) execProcedure = execProcedure + " , '" + query.Replace("'", "''") + "'";
+            execProcedure = execProcedure + ';';
             mylog.LogInformation(execProcedure);
 
-            SqlConnection connection=new AzureSqlConnection(mylog, data)._connection;
+            SqlConnection connection = new AzureSqlConnection(mylog, data)._connection;
 
-            await connection.OpenAsync();       
+            await connection.OpenAsync();
             using (SqlCommand command = new SqlCommand(execProcedure, connection))
             {
                 using (SqlDataReader reader = await command.ExecuteReaderAsync())
