@@ -43,23 +43,8 @@ namespace azap
             // mylog.LogInformation(execProcedure);
 
             SqlConnection connection=new AzureSqlConnection(mylog, data)._connection;
-
-            await connection.OpenAsync();       
-            using (SqlCommand command = new SqlCommand(execProcedure, connection))
-            {
-                command.CommandTimeout = 180;
-                DateTime startTime = DateTime.Now;
-                using (SqlDataReader reader = await command.ExecuteReaderAsync())
-                {
-                    var dataTable = new DataTable();
-                    dataTable.Load(reader);
-                    string jsonResult = JsonConvert.SerializeObject(dataTable);
-                    DateTime endTime = DateTime.Now;
-                    TimeSpan executionTime = endTime - startTime;
-                    mylog.LogInformation($"[vector_function].[" + procedure +"] with searchtype " + searchtype + " executed in {executionTime.TotalSeconds} Seconds");
-                    return new OkObjectResult(jsonResult);
-                }
-            }
+            var result = await AzureSqlData.GetSqlDataTable(execProcedure, connection, mylog, procedure, searchtype);
+            return result;     
         }
     } 
 

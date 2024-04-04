@@ -1,9 +1,13 @@
-using Azure.Storage.Blobs;
 using Microsoft.Extensions.Logging;
 using System;
 using Azure.Identity;
 using Microsoft.Data.SqlClient;
 using Azure.Security.KeyVault.Secrets;
+using System.Data;
+using Newtonsoft.Json;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using azap.util;
 
 
 namespace azap.util
@@ -66,8 +70,29 @@ namespace azap.util
             // _log = log;            
             // _containerClient = new BlobContainerClient(new Uri($"https://{storageAccount}.blob.core.windows.net/{Container}"), credential);  
             // _log.LogInformation($"DatalakeClient: {_containerClient.Uri}");         
-        }
+        }        
 
+    }
+    public class AzureSqlData {
+        public static async Task<IActionResult> GetSqlDataTable(string execProcedure, SqlConnection connection, ILogger mylog, string procedure, string searchtype)
+        {
+            await connection.OpenAsync();
+            using (SqlCommand command = new SqlCommand(execProcedure, connection))
+            {
+                command.CommandTimeout = 180;
+                DateTime startTime = DateTime.Now;
+                using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    var dataTable = new DataTable();
+                    dataTable.Load(reader);
+                    string jsonResult = JsonConvert.SerializeObject(dataTable);
+                    DateTime endTime = DateTime.Now;
+                    TimeSpan executionTime = endTime - startTime;
+                    mylog.LogInformation($"[vector_function].[" + procedure +"] with searchtype " + searchtype + " executed in " + executionTime.TotalSeconds + " Seconds");
+                    return new OkObjectResult(jsonResult);
+                }
+            }
+        }
     }
 
 }
