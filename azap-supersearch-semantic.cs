@@ -40,18 +40,23 @@ namespace azap
             string execProcedure="EXECUTE [vector_function].[" + procedure +"]  '" + vector + "' ," + top + "  , '" + searchtype + "' ";
             if (query != string.Empty)  execProcedure = execProcedure + " , '" + query.Replace("'", "''") + "'";
             execProcedure=execProcedure + ';';
-            mylog.LogInformation(execProcedure);
+            // mylog.LogInformation(execProcedure);
 
             SqlConnection connection=new AzureSqlConnection(mylog, data)._connection;
 
             await connection.OpenAsync();       
             using (SqlCommand command = new SqlCommand(execProcedure, connection))
             {
+                command.CommandTimeout = 180;
+                DateTime startTime = DateTime.Now;
                 using (SqlDataReader reader = await command.ExecuteReaderAsync())
                 {
                     var dataTable = new DataTable();
                     dataTable.Load(reader);
                     string jsonResult = JsonConvert.SerializeObject(dataTable);
+                    DateTime endTime = DateTime.Now;
+                    TimeSpan executionTime = endTime - startTime;
+                    mylog.LogInformation($"[vector_function].[" + procedure +"] with searchtype " + searchtype + " executed in {executionTime.TotalSeconds} Seconds");
                     return new OkObjectResult(jsonResult);
                 }
             }
