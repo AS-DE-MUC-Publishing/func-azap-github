@@ -1,13 +1,14 @@
 using System.Data;
 using System.Collections.Generic;
 using System;
-using Parquet.Data;
+using System.Threading.Tasks;
 using DataColumn = System.Data.DataColumn;
 using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Collections;
 using System.Linq;
 using Parquet;
+using Parquet.Data;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Configuration;
 
@@ -20,9 +21,18 @@ namespace azap.util
 
         public ParquetClient(ILogger logextract) {
             this._log = logextract;
+        }    
+
+
+        private readonly IConfiguration _configuration;
+
+        public ParquetClient(IConfiguration configuration)
+        {
+            _configuration = configuration;
         }
-        
-         public static List<DataField> GenerateSchema(DataTable dt)
+ 
+
+        public static List<DataField> GenerateSchema(DataTable dt)
         {
             var fields = new List<DataField>(dt.Columns.Count);
 

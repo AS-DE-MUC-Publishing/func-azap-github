@@ -71,6 +71,7 @@ namespace azap
             string filepath = data?.filepath + "/"; 
             string source_filename_option=data?.source_filename_option;     
             string days_lastmodified =data?.days_lastmodified; 
+            bool delete_sinkfolder = data?.delete_sinkfolder ?? false;
 
             //-----------------------  Variables -----------------------------------
            
@@ -91,6 +92,24 @@ namespace azap
             {
                 if ( DateTime.Now.AddDays(-1*days)<blobItem.Properties.LastModified)
                 {  
+                       
+                    string folderPath = Path.GetDirectoryName(blobItem.Name);
+                    mylog.LogInformation("folderPath: " + folderPath);
+                    if (folderPath != null  &&  !storageAccount_sink.EndsWith("prod") && delete_sinkfolder)
+                    {
+                        BlobContainerClient sinkContainer = adls_sink._containerClient;
+                        folderPath=folderPath.Replace("\\","/");
+                        await foreach (BlobItem blob in sinkContainer.GetBlobsAsync( prefix: folderPath))
+                                    {
+                                        if (DateTime.Now.AddMinutes(-30) > blob.Properties.LastModified && blob.Name.Contains(source_filename_option))
+                                        {
+                                        await sinkContainer.GetBlobClient(blob.Name).DeleteIfExistsAsync();
+                                        mylog.LogInformation("Deleted exiting blob in sink : " + blob.Name);
+                                        }
+                                    }
+                    }
+                    
+                    
                     // mylog.LogInformation("Found blob:  " + blobItem.Name   );   
                     BlobClient sinkBlob = adls_sink._containerClient.GetBlobClient(blobItem.Name);
                     BlobClient sourceBlob=adls_source._containerClient.GetBlobClient(blobItem.Name);    
