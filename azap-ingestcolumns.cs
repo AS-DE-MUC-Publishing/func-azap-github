@@ -104,6 +104,7 @@ namespace azap
             //if ( DateTime.Now.AddDays(-1*days)<blobItem.Properties.LastModified)
             if ( DateTime.Now.Subtract(TimeSpan.FromDays(Double.Parse(days_lastmodified)))<blobItem.Properties.LastModified)
             {
+                //auskommentiert
             //String Datum_id=blobItem.Name.Replace(filepath + source_filename,"").Substring(0,8);
             //String Datum=Datum_id.Substring(6,2) + "." + Datum_id.Substring(4,2) + "." +  Datum_id.Substring(0,4);
             //Console.WriteLine(DateTime.Now.Subtract(TimeSpan.FromDays(Double.Parse(days_lastmodified))));
