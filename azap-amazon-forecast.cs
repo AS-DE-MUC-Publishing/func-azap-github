@@ -22,10 +22,10 @@ namespace azap
             _logger = logger;
         }
 
-        [Function("azap-amazon-forecast")]
+        [Function("amazon-forecast")]
         public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req, FunctionContext executionContext)
         {
-            ILogger logger = executionContext.GetLogger("azap-amazon-forecast_HttpStart");
+            ILogger logger = executionContext.GetLogger("amazon-forecast");
             //-----------------------  Parameter -----------------------------------
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);             
