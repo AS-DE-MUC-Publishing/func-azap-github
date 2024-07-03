@@ -1,32 +1,32 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using System.Collections.Generic;
 using System.Data;
 using Microsoft.VisualBasic.FileIO;
 using azap.util;
 using System.Globalization;
+using Microsoft.Azure.Functions.Worker;
 
 namespace azap
 {
-    public static class azap_amazon_forecast
-    {
-        [FunctionName("amazon-forecast")]
-        public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
-            ILogger mylog)
-        {                    
+    public  class azap_amazon_forecast {
 
+      private readonly ILogger<azap_amazon_forecast>? _logger;
+
+        public azap_amazon_forecast(ILogger<azap_amazon_forecast>? logger)
+        {
+            _logger = logger;
+        }
+
+        [Function("azap-amazon-forecast")]
+        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req, FunctionContext executionContext)
+        {
+            ILogger logger = executionContext.GetLogger("azap-amazon-forecast_HttpStart");
             //-----------------------  Parameter -----------------------------------
-
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);             
             string storageAccount =data?.storageAccount; 
@@ -50,16 +50,16 @@ namespace azap
             int int_header_row=Int16.Parse(header_row);
 
             // ---------------------- Storage Account --------------------
-            var adls_source = new DatalakeClient(mylog, storageAccount, sourceContainer);
-            var adls_sink = new DatalakeClient(mylog, storageAccount, sinkContainer);
-            var adls_log = new DatalakeClient(mylog, storageAccount, "importlogs");     
+            var adls_source = new DatalakeClient( storageAccount, sourceContainer);
+            var adls_sink = new DatalakeClient( storageAccount, sinkContainer);
+            var adls_log = new DatalakeClient( storageAccount, "importlogs");     
           
          // ---------------------- Reading from Source --------------------
 
             // truncate  temp
         await foreach (BlobItem blobItem in adls_source._containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, filepath ))   
            {   
-                 mylog.LogInformation("blobItem.Name: " + blobItem.Name);
+                 logger.LogInformation("blobItem.Name: " + blobItem.Name);
 
         if (blobItem.Name.Contains(source_filename) && blobItem.Name.EndsWith(source_suffix))         
         {
@@ -75,19 +75,8 @@ namespace azap
             int rownum=1;   
             String Datum_id=ConvertDate.Date2ConvertWithPattern(blobItem.Name.Replace(filepath + source_filename,""), "[0-9]", sink_filename_withDate.ToLower());
             String Datum=Datum_id.ToString();
-            mylog.LogInformation("Datum: " + Datum);
-            DateTime blobstart=DateTime.Now;  
-
-        // // Aktuelle Kultur ermitteln
-        //     CultureInfo currentCulture = CultureInfo.CurrentCulture;
-
-        // // Aktuellen Kalender ermitteln
-        //     Calendar calendar = currentCulture.Calendar;
-        //     DateTime kwDatum = DateTime.Parse(Datum_id.Substring(6,2) + "." + Datum_id.Substring(4,2) + "." + Datum_id.Substring(0,4));
-
-        //  // Kalenderwoche über das Calendar-Objekt ermitteln
-        //     int calendarWeek = calendar.GetWeekOfYear(kwDatum, currentCulture.DateTimeFormat.CalendarWeekRule, currentCulture.DateTimeFormat.FirstDayOfWeek);
-                      
+            logger.LogInformation("Datum: " + Datum);
+            DateTime blobstart=DateTime.Now;               
 
         using (TextFieldParser parser = new TextFieldParser(stream, System.Text.Encoding.UTF8))
              {
@@ -100,13 +89,13 @@ namespace azap
             while (rownum < Int16.Parse(header_row))
                  {
                     parser.ReadFields();                    
-                    mylog.LogInformation("rownum: " + rownum);
+                    logger.LogInformation("rownum: " + rownum);
                     rownum=rownum+1;                       
                 } 
 
             if (rownum==Int16.Parse(header_row))
                 {
-                    mylog.LogInformation("Header aus der Datenquelle wird gelesen");   
+                    logger.LogInformation("Header aus der Datenquelle wird gelesen");   
                     header_source = parser.ReadFields();  
                     rownum=rownum+1;                 
                 }       
@@ -147,16 +136,16 @@ namespace azap
                  // --------------- write sink file ------------------------------------------------------   
 
                 string sinkFile=filepath  + Datum_id.Substring(0,4) +"/" + Datum_id.Substring(4,2) +"/" + sink_filename + Datum_id + ".parquet";
-                mylog.LogInformation("filename: " + sinkFile);  
+                logger.LogInformation("filename: " + sinkFile);  
                 BlobClient sinkBlobClient= adls_sink._containerClient.GetBlobClient(sinkFile);   
-                var parquetClient = new ParquetClient(mylog);    
-                parquetClient.writeToParquet(sinkTable, sinkFile, sinkBlobClient);    
+                var parquetClient = new ParquetClient(logger);    
+                await parquetClient.WriteDataTableToParquet(sinkTable, sinkFile, sinkBlobClient);    
 
                 // --------------- write log file ------------------------------------------------------   
                 string logFile=sinkFile; 
                 BlobClient logBlobClient= adls_log._containerClient.GetBlobClient(sinkFile);   
-                var logParquetClient = new ParquetClient(mylog);    
-                logParquetClient.writeToParquet(logTable, logFile, logBlobClient);  
+                var logParquetClient = new ParquetClient(logger);    
+                await logParquetClient.WriteDataTableToParquet(logTable, logFile, logBlobClient);  
 
                 ColumnPosition.Clear();
                 sinkTable.Clear();
@@ -167,7 +156,7 @@ namespace azap
         }   // if (blobItem.Name.Contains("_wait_for_cleaning")  )                                                 
         } // await foreach (BlobItem blobItem 
             string infostr=filepath  + ": " + copyCount.ToString() + " Files filtered in " + sourceContainer ;          
-            return new OkObjectResult(new {Result = "Success"});            
+            return new OkObjectResult(new {Result = "success"});            
         }  //public static async
     }  //public static class azap_extract_column
 }

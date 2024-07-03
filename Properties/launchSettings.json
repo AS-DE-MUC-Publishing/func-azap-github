@@ -2,7 +2,7 @@
   "profiles": {
     "func_azap_app_common": {
       "commandName": "Project",
-      "commandLineArgs": "--port 7217",
+      "commandLineArgs": "--port 7013",
       "launchBrowser": false
     }
   }
