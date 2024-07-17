@@ -291,14 +291,14 @@ namespace azap
 
                 BlobClient sinkBlobClient= adls_sink._containerClient.GetBlobClient(sinkFile);   
                 var parquetClient = new ParquetClient(logger);    
-                await parquetClient.WriteDataTableToParquet(sinkTable, sinkFile, sinkBlobClient);                       
+                logger.LogInformation(await parquetClient.WriteDataTableToParquet(sinkTable, sinkFile, sinkBlobClient));
                 logger.LogInformation("Blob transformed to parquet from source file  " + filepath + source_filename + " from " + sourceContainer +  " to container " + sinkContainer + " as " + sinkFile); 
 
                  // --------------- write log file ------------------------------------------------------   
                 string logFile=sinkFile; 
                 BlobClient logBlobClient= adls_log._containerClient.GetBlobClient(sinkFile);   
                 var logParquetClient = new ParquetClient(logger);    
-                await logParquetClient.WriteDataTableToParquet(logTable, logFile, logBlobClient);             
+                logger.LogInformation(await logParquetClient.WriteDataTableToParquet(logTable, logFile, logBlobClient));             
 
                 ColumnPosition.Clear();
                 sinkTable.Reset();
