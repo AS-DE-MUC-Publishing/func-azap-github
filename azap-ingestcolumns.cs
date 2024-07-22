@@ -298,7 +298,7 @@ namespace azap
                 string logFile=sinkFile; 
                 BlobClient logBlobClient= adls_log._containerClient.GetBlobClient(sinkFile);   
                 var logParquetClient = new ParquetClient(logger);    
-                logger.LogInformation(await logParquetClient.WriteDataTableToParquet(logTable, logFile, logBlobClient));             
+                logger.LogInformation(await logParquetClient.WriteDataTableToParquet(logTable, logFile, logBlobClient, false));             
 
                 ColumnPosition.Clear();
                 sinkTable.Reset();

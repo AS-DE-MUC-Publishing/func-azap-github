@@ -197,7 +197,7 @@ namespace azap.util
                                         // Add the value to the list, but if it's a DateTime then create it as a DateTimeOffset first
                                         list.Add(sourceTable.Columns[columnIndex].DataType == typeof(DateTime)
                                             ? new DateTimeOffset((DateTime) row[columnIndex])
-                                            : row[columnIndex].ToString());
+                                            : row[columnIndex]);
                                     }
                                 }
 
