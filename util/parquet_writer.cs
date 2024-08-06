@@ -44,6 +44,10 @@ namespace azap.util
             {
                 field = new DataField<int>(column.ColumnName);
             }
+             else if (column.DataType == typeof(Int32))
+            {
+                field = new DataField<Int32>(column.ColumnName);
+            }
             else if (column.DataType == typeof(long))
             {
                 field = new DataField<long>(column.ColumnName);

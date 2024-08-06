@@ -8,8 +8,8 @@ public class importLogTable : DataTable
     {
             Columns.Add("date_id",typeof(string));
             //Columns.Add("kw",typeof(int));            
-            Columns.Add("rows",typeof(int));
-            Columns.Add("filesize",typeof(int));            
+            Columns.Add("rows",typeof(string));
+            Columns.Add("filesize",typeof(string));            
             }
     }
    
