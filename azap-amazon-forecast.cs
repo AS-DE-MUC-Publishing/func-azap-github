@@ -126,8 +126,8 @@ namespace azap
                      DataRow logDataRow = logTable.NewRow();
                      logDataRow[0]=Datum_id;       
                      //logDataRow[1]=calendarWeek;                                       
-                     logDataRow[1]=rownum.ToString();
-                     logDataRow[2]=stream.Length.ToString();                      
+                     logDataRow[1]=rownum;
+                     logDataRow[2]=stream.Length;                      
                      logTable.Rows.Add(logDataRow);  
 
                      parser.Close();                       
