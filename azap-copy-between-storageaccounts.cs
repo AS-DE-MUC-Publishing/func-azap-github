@@ -10,6 +10,7 @@ using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
 using Azure.Storage.Sas;
 using Azure.Storage.Blobs.Specialized;
+using Azure;
 
 
 namespace azap
@@ -119,14 +120,26 @@ namespace azap
                     {
                         BlobContainerClient sinkContainer = adls_sink._containerClient;
                         folderPath=folderPath.Replace("\\","/");
-                        await foreach (BlobItem blob in sinkContainer.GetBlobsAsync( prefix: folderPath))
-                                    {
-                                        if (DateTime.Now.AddMinutes(-30) > blob.Properties.LastModified && blob.Name.Contains(source_filename_option))
-                                        {
-                                        await sinkContainer.GetBlobClient(blob.Name).DeleteIfExistsAsync();
-                                        logger.LogInformation("Deleted exiting blob in sink : " + blob.Name);
-                                        }
-                                    }
+                     await foreach (BlobItem blob in sinkContainer.GetBlobsAsync(prefix: folderPath))
+                    {
+                        if (blob.Name.Contains(source_filename_option))
+                        {
+                            try
+                            {
+                                await sinkContainer.GetBlobClient(blob.Name).DeleteIfExistsAsync();
+                                logger.LogInformation("Deleted existing blob in sink: " + blob.Name);
+                            }
+                            catch (RequestFailedException ex) when (ex.ErrorCode == BlobErrorCode.ConditionNotMet)
+                            {
+                                logger.LogWarning($"Failed to delete blob {blob.Name} due to condition not met: {ex.Message}");
+                            }
+                            catch (RequestFailedException ex)
+                            {
+                                logger.LogError($"Failed to delete blob {blob.Name}: {ex.Message}");
+                                throw;
+                            }
+                        }
+                    }
                     }
                     
                     
