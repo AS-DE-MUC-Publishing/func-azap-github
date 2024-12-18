@@ -115,7 +115,7 @@ namespace azap
                 {  
                        
                     string folderPath = Path.GetDirectoryName(blobItem.Name);
-                    logger.LogInformation("folderPath: " + folderPath);
+                    //logger.LogInformation("folderPath: " + folderPath);
                     if (folderPath != null  &&  !storageAccount_sink.EndsWith("prod") && delete_sinkfolder)
                     {
                         BlobContainerClient sinkContainer = adls_sink._containerClient;
@@ -176,25 +176,39 @@ namespace azap
 
                     var uri = blobUriBuilder.ToUri();
                     sourceUri = uri;
-                    }
+                   
                     CopyFromUriOperation response = await sinkBlob.StartCopyFromUriAsync(sourceUri).ConfigureAwait(false);
+                    logger.LogInformation($"Started copy of blob {blobItem.Name} from source to sink.");
                     await response.WaitForCompletionAsync().ConfigureAwait(false);
 
                     // await sinkBlob.StartCopyFromUriAsync (sourceBlob.GenerateSasUri);
                     logger.LogInformation("Copied " + blobItem.Name   );   
-                    copyCount=copyCount+1;                                                    
+                    copyCount=copyCount+1; 
+                    }                                                   
                 }  
             }          
             }  
+            logger.LogInformation($"Total blobs copied: {copyCount}");
             resultstring="success"; 
             return resultstring;              
-            } // try
-            catch  (Exception ex)
-            {
+            //} // try
+            // catch  (Exception ex)
+            // {
             
-                    resultstring="error: " + ex.Message;
-                    return resultstring;
-            }  // catch         
+            //         resultstring="error: " + ex.Message;
+            //         return resultstring;
+            // }  // catch   
+             }
+            catch (RequestFailedException ex)
+            {
+                logger.LogError($"Request failed: {ex.Message}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"An unexpected error occurred: {ex.Message}");
+                throw;
+            }      
         }       
      }
 }
