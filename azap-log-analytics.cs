@@ -96,7 +96,7 @@ namespace azap
                 dt.Columns.Add(column.Name, typeof(string));
             }
             // Add the export_date column
-            dt.Columns.Add("datum", typeof(string));
+            // dt.Columns.Add("datum", typeof(string));
 
             foreach (var row in table.Rows)
             {
@@ -106,7 +106,7 @@ namespace azap
                     newRow[i] = row[i];
                 }
                 // Set the export_date value to the current UTC time
-                newRow["datum"] = DateTime.UtcNow.ToString("o");
+                // newRow["datum"] = DateTime.UtcNow.ToString("o");
                 dt.Rows.Add(newRow);
             }
 
