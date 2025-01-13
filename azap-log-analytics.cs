@@ -43,20 +43,25 @@ namespace azap
             //-----------------------  Variables -----------------------------------     
             string keyVaultUrl = $"https://kv-azap-common-{environment}.vault.azure.net/";
             string secretName = "id-log-analytics";
-            string sinkFile = $"{source}/{DateTime.UtcNow:yyyy}/{DateTime.UtcNow:MM}/{DateTime.UtcNow:dd}/{source}_{DateTime.UtcNow:yyyyMMdd-HHmmss}.parquet";
             var keyvaultclient = new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
             KeyVaultSecret secret = await keyvaultclient.GetSecretAsync(secretName);
             string workspaceId = secret.Value;      
 
             int days=Int16.Parse(days_lastmodified); 
             var adls_sink = new DatalakeClient( storageAccount, "log-analytics"); 
+            var client = new LogsQueryClient(new DefaultAzureCredential());
+            
 
-            string query = "";
-
+            for (int d = 0; d < days; d++)
+            {
+            string query = "";           
+            string sinkFile = $"{source}/{DateTime.UtcNow.AddDays(-d):yyyy}/{DateTime.UtcNow.AddDays(-d):MM}/{source}_{DateTime.UtcNow.AddDays(-d).ToString("yyyy-MM-dd")}.parquet";
+           
             switch (source)
             {   
                 case "StorageBlobLogs":
-                query = @"StorageBlobLogs
+                query = $@"StorageBlobLogs
+                | where  bin(TimeGenerated ,1d) == datetime({DateTime.UtcNow.AddDays(-d).ToString("yyyy-MM-dd")})
                 | extend CallerIpAddress = iff(UserAgentHeader endswith 'Analytics/Spark/' and CallerIpAddress startswith '10.0', '10.0.xx.xx', iff(UserAgentHeader == 'SQLBLOBACCESS' and CallerIpAddress startswith '10.0.0', '10.0.0.xx', split(CallerIpAddress, ':')[0]))
                 | extend ObjectKeySplit = split(ObjectKey, '/')
                 | extend Container = tostring(ObjectKeySplit[2])
@@ -65,10 +70,9 @@ namespace azap
                             ReadCount = countif(Category == 'StorageRead'), 
                             WriteCount = countif(Category == 'StorageWrite'), 
                             DeleteCount = countif(Category == 'StorageDelete'), 
-                            MaxTimeGenerated = max(TimeGenerated),
-                            MinTimeGenerated = min(TimeGenerated)
-                            by AccountName, CallerIpAddress, AuthenticationType, Container, Folder, UserAgentHeader
-                | project AccountName, CallerIpAddress, AuthenticationType, Container, Folder, UserAgentHeader, EventCount, ReadCount, WriteCount, DeleteCount, MaxTimeGenerated, MinTimeGenerated
+                            MaxTimeGenerated = max(TimeGenerated)
+                            by Datum=bin(TimeGenerated, 1d), AccountName, CallerIpAddress, AuthenticationType, Container, Folder, UserAgentHeader
+                | project Datum, AccountName, CallerIpAddress, AuthenticationType, Container, Folder, UserAgentHeader, EventCount, ReadCount, WriteCount, DeleteCount, MaxTimeGenerated
                 | order by EventCount desc";
                     break;
                 
@@ -77,9 +81,7 @@ namespace azap
                     break;
             }
             
-            
-
-            var client = new LogsQueryClient(new DefaultAzureCredential());
+                        
             Response<LogsQueryResult> response = await client.QueryWorkspaceAsync(
                 workspaceId,
                 query,
@@ -112,24 +114,7 @@ namespace azap
             BlobClient sinkBlobClient = adls_sink._containerClient.GetBlobClient(sinkFile);
             var parquetClient = new ParquetClient(logger);
             logger.LogInformation(await parquetClient.WriteDataTableToParquet(dt, sinkFile, sinkBlobClient));
-
-            // foreach (var column in table.Columns)
-            // {
-            //     Console.Write(column.Name + ";");
-            // }
-
-            // Console.WriteLine();
-
-            // var columnCount = table.Columns.Count;
-            // foreach (var row in table.Rows)
-            // {
-            //     for (int i = 0; i < columnCount; i++)
-            //     {
-            //         Console.Write(row[i] + ";");
-            //     }
-
-            //     Console.WriteLine();
-            // }
+        }
 
 
           
