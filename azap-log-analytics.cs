@@ -71,7 +71,7 @@ namespace azap
                             WriteCount = countif(Category == 'StorageWrite'), 
                             DeleteCount = countif(Category == 'StorageDelete'), 
                             MaxTimeGenerated = max(TimeGenerated)
-                            by Datum=bin(TimeGenerated, 1d), AccountName, CallerIpAddress, AuthenticationType, Container, Folder, UserAgentHeader
+                            by Datum=format_datetime(TimeGenerated, 'yyyy-MM-dd'), AccountName, CallerIpAddress, AuthenticationType, Container, Folder, UserAgentHeader
                 | project Datum, AccountName, CallerIpAddress, AuthenticationType, Container, Folder, UserAgentHeader, EventCount, ReadCount, WriteCount, DeleteCount, MaxTimeGenerated
                 | order by EventCount desc";
                     break;
