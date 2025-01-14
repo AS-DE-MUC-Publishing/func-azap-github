@@ -79,6 +79,7 @@ namespace azap
     CleanIp startswith '10.' and UserAgentHeader == 'SRP/1.0', 'Internal Service (Secure Remote Password protocol)',
     CleanIp startswith '10.' and UserAgentHeader == 'services_xstore_transport_HTTP2/1.0', 'Internal Service (xstore)',
     ipv4_is_in_range(CleanIp, '10.89.0.0/8') and UserAgentHeader  startswith 'AzureDataFactoryCopy FxVersion', 'Synapse Pipelines',
+    CleanIp startswith '10.' and UserAgentHeader startswith 'Microsoft/Azure/Storage/ azsdk-go-azblob' and AuthenticationType=='SAS', 'Internal Service (SAS Copy)',
     'Unknown'
 ),
 caller_source = case(
@@ -86,12 +87,10 @@ caller_source = case(
     CleanIp == '10.0.0.xx',       'Synapse MVNET',
     CleanIp == '10.0.xx.xx',      'Azure VNET',
     ipv4_is_in_range(CleanIp, '10.19.21.208/28'), 'AZAP VNET - Prod',
-    ipv4_is_in_range(CleanIp, '10.19.20.208/28'), 'AZAP VNET - Prod',
-    CleanIp startswith '10.' and UserAgentHeader startswith 'azsdk-python-storage-blob', 'Azure VNET',
-    CleanIp startswith '10.' and UserAgentHeader startswith 'azsdk-dotnet-storage', 'Azure VNET',
-    CleanIp startswith '10.' and UserAgentHeader == 'SRP/1.0', 'Trusted Internal Network',
-    ipv4_is_in_range(CleanIp, '10.89.0.0/8') and UserAgentHeader  startswith 'AzureDataFactoryCopy FxVersion', 'Azure VNET',
-    CleanIp startswith '10.' and UserAgentHeader == 'services_xstore_transport_HTTP2/1.0', 'Azure VNET',
+    ipv4_is_in_range(CleanIp, '10.19.20.208/28'), 'AZAP VNET - Dev',
+    CleanIp startswith '10.' and AuthenticationType=='Trusted Internal Network', 'Azure VNET (Trusted Internal Network)',
+    CleanIp startswith '10.' and AuthenticationType=='SAS', 'Azure VNET (SAS)',
+    CleanIp startswith '10.', 'Azure VNET',
     'Unknown'
 )
 | summarize
