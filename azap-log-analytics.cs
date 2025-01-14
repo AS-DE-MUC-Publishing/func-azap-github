@@ -60,20 +60,73 @@ namespace azap
             switch (source)
             {   
                 case "StorageBlobLogs":
-                query = $@"StorageBlobLogs
-                | where  bin(TimeGenerated ,1d) == datetime({DateTime.UtcNow.AddDays(-d).ToString("yyyy-MM-dd")})
-                | extend CallerIpAddress = iff(UserAgentHeader endswith 'Analytics/Spark/' and CallerIpAddress startswith '10.0', '10.0.xx.xx', iff(UserAgentHeader == 'SQLBLOBACCESS' and CallerIpAddress startswith '10.0.0', '10.0.0.xx', split(CallerIpAddress, ':')[0]))
-                | extend ObjectKeySplit = split(ObjectKey, '/')
-                | extend Container = tostring(ObjectKeySplit[2])
-                | extend Folder = strcat(ObjectKeySplit[3], '/', ObjectKeySplit[4])
-                | summarize EventCount = count(), 
-                            ReadCount = countif(Category == 'StorageRead'), 
-                            WriteCount = countif(Category == 'StorageWrite'), 
-                            DeleteCount = countif(Category == 'StorageDelete'), 
-                            MaxTimeGenerated = max(TimeGenerated)
-                            by Datum=format_datetime(TimeGenerated, 'yyyy-MM-dd'), AccountName, CallerIpAddress, AuthenticationType, Container, Folder, UserAgentHeader
-                | project Datum, AccountName, CallerIpAddress, AuthenticationType, Container, Folder, UserAgentHeader, EventCount, ReadCount, WriteCount, DeleteCount, MaxTimeGenerated
-                | order by EventCount desc";
+    query = $@"StorageBlobLogs
+    | where bin(TimeGenerated, 1d) == datetime({DateTime.UtcNow.AddDays(-d).ToString("yyyy-MM-dd")})
+| extend CleanIp = iff(UserAgentHeader endswith 'Analytics/Spark/' and CallerIpAddress startswith '10.0', '10.0.xx.xx',
+                       iff(UserAgentHeader == 'SQLBLOBACCESS' and CallerIpAddress startswith '10.0.0', '10.0.0.xx',
+                           split(CallerIpAddress, ':')[0]))
+| extend ObjectKeySplit = split(ObjectKey, '/')
+| extend Container = tostring(ObjectKeySplit[2])
+| extend Folder = strcat(ObjectKeySplit[3], '/', ObjectKeySplit[4])
+| extend caller_name = case(
+    CleanIp == '146.185.106.104',                     'Self Hosted Integration Runtime',
+    CleanIp == '10.0.0.xx',                            'SQL Serverless',
+    CleanIp == '10.0.xx.xx',                           'SparkPool',
+    ipv4_is_in_range(CleanIp, '10.19.21.208/28'),      'Azure Functions',
+    ipv4_is_in_range(CleanIp, '10.19.20.208/28'),      'Azure Functions',
+    CleanIp startswith '10.' and UserAgentHeader startswith 'azsdk-python-storage-blob', 'Sparkpool Python sdk',
+    CleanIp startswith '10.' and UserAgentHeader startswith 'azsdk-dotnet-storage', 'Sparkpool .NET sdk',
+    CleanIp startswith '10.' and UserAgentHeader == 'SRP/1.0', 'Internal Service (Secure Remote Password protocol)',
+    CleanIp startswith '10.' and UserAgentHeader == 'services_xstore_transport_HTTP2/1.0', 'Internal Service (xstore)',
+    ipv4_is_in_range(CleanIp, '10.89.0.0/8') and UserAgentHeader  startswith 'AzureDataFactoryCopy FxVersion', 'Synapse Pipelines',
+    'Unknown'
+),
+caller_source = case(
+    CleanIp == '146.185.106.104', 'BGROUP',
+    CleanIp == '10.0.0.xx',       'Synapse MVNET',
+    CleanIp == '10.0.xx.xx',      'Azure VNET',
+    ipv4_is_in_range(CleanIp, '10.19.21.208/28'), 'AZAP VNET - Prod',
+    ipv4_is_in_range(CleanIp, '10.19.20.208/28'), 'AZAP VNET - Prod',
+    CleanIp startswith '10.' and UserAgentHeader startswith 'azsdk-python-storage-blob', 'Azure VNET',
+    CleanIp startswith '10.' and UserAgentHeader startswith 'azsdk-dotnet-storage', 'Azure VNET',
+    CleanIp startswith '10.' and UserAgentHeader == 'SRP/1.0', 'Trusted Internal Network',
+    ipv4_is_in_range(CleanIp, '10.89.0.0/8') and UserAgentHeader  startswith 'AzureDataFactoryCopy FxVersion', 'Azure VNET',
+    CleanIp startswith '10.' and UserAgentHeader == 'services_xstore_transport_HTTP2/1.0', 'Azure VNET',
+    'Unknown'
+)
+| summarize
+    EventCount       = count(),
+    ReadCount        = countif(Category == 'StorageRead'),
+    WriteCount       = countif(Category == 'StorageWrite'),
+    DeleteCount      = countif(Category == 'StorageDelete'),
+    MaxTimeGenerated = max(TimeGenerated),
+    MinTimeGenerated = min(TimeGenerated)
+    by
+      Datum          = format_datetime(TimeGenerated, 'yyyy-MM-dd'),
+      AccountName,
+      CallerIpAddress,
+      caller_name,
+      caller_source,
+      AuthenticationType,
+      Container,
+      Folder,
+      UserAgentHeader
+| project Datum,
+          AccountName,
+          CallerIpAddress,
+          caller_name,
+          caller_source,
+          AuthenticationType,
+          Container,
+          Folder,
+          UserAgentHeader,
+          EventCount,
+          ReadCount,
+          WriteCount,
+          DeleteCount,
+          MaxTimeGenerated,
+          MinTimeGenerated
+| order by EventCount desc";
                     break;
                 
                 default:
