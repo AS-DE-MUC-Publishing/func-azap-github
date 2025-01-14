@@ -79,7 +79,7 @@ namespace azap
     CleanIp startswith '10.' and UserAgentHeader == 'SRP/1.0', 'Internal Service (Secure Remote Password protocol)',
     CleanIp startswith '10.' and UserAgentHeader == 'services_xstore_transport_HTTP2/1.0', 'Internal Service (xstore)',
     ipv4_is_in_range(CleanIp, '10.89.0.0/8') and UserAgentHeader  startswith 'AzureDataFactoryCopy FxVersion', 'Synapse Pipelines',
-    CleanIp startswith '10.' and UserAgentHeader startswith 'Microsoft/Azure/Storage/ azsdk-go-azblob' and AuthenticationType=='SAS', 'Internal Service (SAS Copy)',
+    ipv4_is_in_range(CleanIp, '100.64.0.0/10') and UserAgentHeader startswith 'Microsoft/Azure/Storage/ azsdk-go-azblob' and AuthenticationType=='SAS', 'Unknown (SAS)',
     'Unknown'
 ),
 caller_source = case(
@@ -89,7 +89,7 @@ caller_source = case(
     ipv4_is_in_range(CleanIp, '10.19.21.208/28'), 'AZAP VNET - Prod',
     ipv4_is_in_range(CleanIp, '10.19.20.208/28'), 'AZAP VNET - Dev',
     CleanIp startswith '10.' and AuthenticationType=='Trusted Internal Network', 'Azure VNET (Trusted Internal Network)',
-    CleanIp startswith '10.' and AuthenticationType=='SAS', 'Azure VNET (SAS)',
+    ipv4_is_in_range(CleanIp, '100.64.0.0/10'), 'Carrier-grade NAT',
     CleanIp startswith '10.', 'Azure VNET',
     'Unknown'
 )
