@@ -1,8 +1,8 @@
-name: Deploy DotNet Function
+name: Deploy DotNet project to Azure Function App
 
 on:
- # push:
- #   branches: ["main"]
+  # push:
+  #   branches: ["main"]
 
   workflow_dispatch:
 
@@ -47,4 +47,18 @@ jobs:
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}-dev
         package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-        #publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }} # Remove publish-profile to use Azure RBAC
+
+    - name: 'Log in to Azure with AZ CLI'
+      if: ${{ success() }}
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.TECHDATA_CLIENTID }} # Required to log in with OIDC
+        tenant-id: ${{ vars.BERTELSMANN_TENANTID }} # Required to log in with OIDC
+        subscription-id: ${{ vars.TECHDATA_SUBSCRIPTIONID_PROD }} # Required to log in with OIDC
+    
+    - name: 'Deploy to Production'
+      if: ${{ success() }}
+      uses: Azure/functions-action@v1
+      with:
+        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}-prod
+        package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
