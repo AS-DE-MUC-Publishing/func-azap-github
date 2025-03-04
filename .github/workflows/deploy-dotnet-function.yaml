@@ -48,17 +48,19 @@ jobs:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}-dev
         package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
 
-    - name: 'Log in to Azure with AZ CLI'
-      if: ${{ success() }}
-      uses: azure/login@v2
-      with:
-        client-id: ${{ secrets.TECHDATA_CLIENTID }} # Required to log in with OIDC
-        tenant-id: ${{ vars.BERTELSMANN_TENANTID }} # Required to log in with OIDC
-        subscription-id: ${{ vars.TECHDATA_SUBSCRIPTIONID_PROD }} # Required to log in with OIDC
-    
-    - name: 'Deploy to Production'
-      if: ${{ success() }}
-      uses: Azure/functions-action@v1
-      with:
-        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}-prod
-        package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
+ deploy-prod:
+    runs-on: windows-latest
+    needs: build-and-deploy
+    environment: prod
+    steps:
+      - name: 'Log in to Azure (prod)'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.TECHDATA_CLIENTID }}
+          tenant-id: ${{ vars.BERTELSMANN_TENANTID }}
+          subscription-id: ${{ vars.TECHDATA_SUBSCRIPTIONID_PROD }}
+      - name: 'Deploy to Production'
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}-prod
+          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
