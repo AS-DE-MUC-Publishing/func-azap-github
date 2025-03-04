@@ -1,8 +1,10 @@
 name: Deploy DotNet Function
 
 on:
-  push:
-    branches: ["main"]
+ # push:
+ #   branches: ["main"]
+
+  workflow_dispatch:
 
 env:
   AZURE_FUNCTIONAPP_NAME: 'func-azap-app-github'   # set this to your function app name on Azure
