@@ -1,4 +1,4 @@
-name: Deploy DotNet project to Azure Function App
+name: Deploy DotNet Function
 
 on:
   push:
@@ -23,9 +23,9 @@ jobs:
     - name: 'Log in to Azure with AZ CLI'
       uses: azure/login@v2
       with:
-        client-id: ${{ vars.TECHDATA_CLIENTID }} # Required to log in with OIDC
-        tenant-id: ${{ secrets.BERTELSMANN_TENANTID }} # Required to log in with OIDC
-        subscription-id: ${{ secrets.TECHDATA_SUBSCRIPTIONID_DEV }} # Required to log in with OIDC
+        client-id: ${{ secrets.TECHDATA_CLIENTID }} # Required to log in with OIDC
+        tenant-id: ${{ vars.BERTELSMANN_TENANTID }} # Required to log in with OIDC
+        subscription-id: ${{ vars.TECHDATA_SUBSCRIPTIONID_DEV }} # Required to log in with OIDC
 
     - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
       uses: actions/setup-dotnet@v4
