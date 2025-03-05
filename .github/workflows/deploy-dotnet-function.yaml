@@ -51,6 +51,8 @@ jobs:
   deploy-prod:
     runs-on: windows-latest
     needs: build-and-deploy
+    permissions:
+      id-token: write
     environment: prod
     steps:
       - name: 'Log in to Azure (prod)'
