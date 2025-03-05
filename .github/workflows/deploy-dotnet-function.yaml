@@ -42,7 +42,7 @@ jobs:
         popd
 
     - name: 'Upload Build Artifacts'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dotnet-build
         path: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'  
@@ -66,7 +66,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 'Download Build Artifacts'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: dotnet-build
           path: '.'
