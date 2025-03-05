@@ -41,6 +41,13 @@ jobs:
         dotnet build --configuration Release --output ./output
         popd
 
+    - name: 'Upload Build Artifacts'
+      uses: actions/upload-artifact@v3
+      with:
+        name: dotnet-build
+        path: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'  
+
+
     - name: 'Run Azure Functions Action'
       uses: Azure/functions-action@v1
       id: deploy-to-function-app
@@ -55,6 +62,15 @@ jobs:
       id-token: write
     environment: prod
     steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v4
+
+      - name: 'Download Build Artifacts'
+        uses: actions/download-artifact@v3
+        with:
+          name: dotnet-build
+          path: '.'
+          
       - name: 'Log in to Azure (prod)'
         uses: azure/login@v2
         with:
