@@ -1,4 +1,4 @@
-name: Deploy DotNet project to Azure Function App
+name: Deploy DotNet Function
 
 on:
   # push:
@@ -12,7 +12,7 @@ env:
   DOTNET_VERSION: '8.0.x'                   # set this to the dotnet version to use (e.g. '2.1.x', '3.1.x', '5.0.x')
 
 jobs:
-  build-and-deploy:
+  deploy-dev:
     runs-on: windows-latest # For Linux, use ubuntu-latest
     permissions:
           id-token: write # Required for OIDC
@@ -41,12 +41,6 @@ jobs:
         dotnet build --configuration Release --output ./output
         popd
 
-    - name: 'Upload Build Artifacts'
-      uses: actions/upload-artifact@v4
-      with:
-        name: dotnet-build
-        path: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'  
-
 
     - name: 'Run Azure Functions Action'
       uses: Azure/functions-action@v1
@@ -57,28 +51,38 @@ jobs:
 
   deploy-prod:
     runs-on: windows-latest
-    needs: build-and-deploy
+    needs: deploy-dev
     permissions:
-      id-token: write
+      id-token: write # Required for OIDC
+      contents: read # Required for actions/checkout
     environment: prod
     steps:
-      - name: 'Checkout GitHub Action'
-        uses: actions/checkout@v4
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@v4
 
-      - name: 'Download Build Artifacts'
-        uses: actions/download-artifact@v4
-        with:
-          name: dotnet-build
-          path: '.'
-          
-      - name: 'Log in to Azure (prod)'
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.TECHDATA_CLIENTID }}
-          tenant-id: ${{ vars.BERTELSMANN_TENANTID }}
-          subscription-id: ${{ vars.TECHDATA_SUBSCRIPTIONID_PROD }}
-      - name: 'Deploy to Production'
-        uses: Azure/functions-action@v1
-        with:
-          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}-prod
-          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
+    - name: 'Log in to Azure with AZ CLI'
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.TECHDATA_CLIENTID }} # Required to log in with OIDC
+        tenant-id: ${{ vars.BERTELSMANN_TENANTID }} # Required to log in with OIDC
+        subscription-id: ${{ vars.TECHDATA_SUBSCRIPTIONID_PROD }} # Required to log in with OIDC
+
+    - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: 'Resolve Project Dependencies Using Dotnet'
+      shell: pwsh # For Linux, use bash
+      run: |
+        pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+        dotnet build --configuration Release --output ./output
+        popd   
+
+
+    - name: 'Run Azure Functions Action'
+      uses: Azure/functions-action@v1
+      id: deploy-to-function-app
+      with:
+        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}-prod
+        package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
